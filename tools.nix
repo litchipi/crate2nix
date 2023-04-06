@@ -413,12 +413,13 @@ rec {
               };
             in
             pkgs.runCommand (lib.removeSuffix ".tar.gz" src.name) { }
-              ''
-                mkdir -p $out
-                cp -apR ${src}/* $out
-                echo '{"package":null,"files":{}}' > $out/.cargo-checksum.json
-              '';
-
+            ''
+              mkdir -p $out
+              MANIFEST=$(grep -rn 'name\s=\s"${name}"' --include Cargo.toml ${src}|cut -d ":" -f 1)
+              DIR=$(dirname $MANIFEST)
+              cp -apR $DIR/* $out
+              echo '{"package":null,"files":{}}' > $out/.cargo-checksum.json
+            '';
         };
       };
   };
