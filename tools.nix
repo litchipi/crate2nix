@@ -349,7 +349,17 @@ rec {
                 replace-with = "vendored-sources"
               '';
             gitSources = packagesByType."git" or [ ];
-            gitSourcesUnique = lib.unique gitSources;
+            acc_src_on = e: acc: acc // {
+              dependencies = acc.dependencies ++ e.dependencies;
+            };
+            acc_src = lib.foldl' (acc: e:
+              if lib.elem (e.source) (builtins.map (a: a.source) acc)
+              then builtins.map (a: a // {
+                dependencies = lib.unique (a.dependencies ++ e.dependencies);
+              }) acc
+              else acc ++ [ e ]
+            ) [];
+            gitSourcesUnique = acc_src gitSources;
             gitSourceConfigs = builtins.map gitSourceConfig gitSourcesUnique;
             gitSourceConfigsString = lib.concatStrings gitSourceConfigs;
           in
